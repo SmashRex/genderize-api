@@ -1,4 +1,4 @@
-### Genderize API Integration
+# Genderize API Integration
 ## 📌 Overview
 This project provides a backend API that integrates with the Genderize.io service. It exposes a single endpoint that fetches gender probability data, processes it with custom confidence logic, and returns a structured JSON response.
 
@@ -14,9 +14,9 @@ This project provides a backend API that integrates with the Genderize.io servic
 - 500 Internal Server Error: General server issues.
 - 502 Bad Gateway: Upstream API (Genderize) failure.
 
-# Edge Case Handling: Returns "No prediction available..." if gender is null or count is 0.
+### Edge Case Handling: Returns "No prediction available..." if gender is null or count is 0.
 
-#CORS Support: Includes Access-Control-Allow-Origin: * for cross-domain accessibility.
+### CORS Support: Includes Access-Control-Allow-Origin: * for cross-domain accessibility.
 
 ## 🚀 API Reference
 Get Gender Classification
