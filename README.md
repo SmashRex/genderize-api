@@ -1,76 +1,148 @@
-# Genderize API Integration
-## 📌 Overview
-This project provides a backend API that integrates with the Genderize.io service. It exposes a single endpoint that fetches gender probability data, processes it with custom confidence logic, and returns a structured JSON response.
+# Genderize API - Stage 1
 
-## ⚙️ Features
-- External API Integration: Seamlessly calls Genderize.io using the name query parameter.
-- Data Transformation: * Renames count to sample_size.
-- Computes is_confident: Returns true only if probability >= 0.7 AND sample_size >= 100.
-- Adds processed_at: Includes a current UTC timestamp in ISO 8601 format.
+A REST API that accepts a name, calls three external APIs (Genderize, Agify, Nationalize), classifies the result, stores it in a PostgreSQL database, and exposes endpoints to manage profiles.
 
-# Robust Error Handling:
-- 400 Bad Request: Missing or empty name.
-- 422 Unprocessable Entity: Name is not a string.
-- 500 Internal Server Error: General server issues.
-- 502 Bad Gateway: Upstream API (Genderize) failure.
+## Base URL
+https://genderize-api-rouge.vercel.app
+## Endpoints
 
-### Edge Case Handling: Returns "No prediction available..." if gender is null or count is 0.
+### 1. Create Profile
+**POST** `/api/profiles`
 
-### CORS Support: Includes Access-Control-Allow-Origin: * for cross-domain accessibility.
+Request body:
+```json
+{ "name": "ella" }
+```
 
-## 🚀 API Reference
-Get Gender Classification
-HTTP
-GET /api/classify?name={name}
-✅ Success Response (200 OK)
-JSON
+Success Response (201):
+```json
 {
   "status": "success",
   "data": {
-    "name": "john",
-    "gender": "male",
-    "probability": 0.99,
-    "sample_size": 1234,
-    "is_confident": true,
-    "processed_at": "2026-04-01T12:00:00Z"
+    "id": "019d9d31-a285-75d8-9911-39577f465842",
+    "name": "ella",
+    "gender": "female",
+    "gender_probability": 0.99,
+    "sample_size": 97517,
+    "age": 53,
+    "age_group": "adult",
+    "country_id": "CM",
+    "country_probability": 0.09,
+    "created_at": "2026-04-17T21:29:11.284Z"
   }
 }
-❌ Error Responses
-Missing Parameter (400):
+```
 
-JSON
+If the same name is submitted again:
+```json
 {
-  "status": "error",
-  "message": "Missing or empty name parameter"
+  "status": "success",
+  "message": "Profile already exists",
+  "data": { ...existing profile... }
 }
-No Data Found (404/200 Edge Case):
+```
 
-JSON
+---
+
+### 2. Get All Profiles
+**GET** `/api/profiles`
+
+Optional filters:
+- `?gender=male`
+- `?country_id=NG`
+- `?age_group=adult`
+- Filters can be combined: `?gender=male&country_id=NG`
+
+Success Response (200):
+```json
 {
-  "status": "error",
-  "message": "No prediction available for the provided name"
+  "status": "success",
+  "count": 2,
+  "data": [...]
 }
-🛠️ Getting Started
-1. Clone the repository
-Bash
-git clone https://github.com/SmashRex/genderize-api.git
-cd genderize-api
-2. Install dependencies
-Bash
+```
+
+---
+
+### 3. Get Single Profile
+**GET** `/api/profiles/:id`
+
+Success Response (200):
+```json
+{
+  "status": "success",
+  "data": { ...profile... }
+}
+```
+
+---
+
+### 4. Delete Profile
+**DELETE** `/api/profiles/:id`
+
+Returns `204 No Content` on success.
+
+---
+
+## Error Responses
+
+All errors follow this format:
+```json
+{ "status": "error", "message": "<reason>" }
+```
+
+| Status | Meaning |
+|--------|---------|
+| 400 | Missing or empty name |
+| 422 | name is not a string |
+| 404 | Profile not found |
+| 502 | External API returned invalid response |
+| 500 | Internal server error |
+
+---
+
+## Classification Logic
+
+**Age group** (from Agify):
+- 0–12 → child
+- 13–19 → teenager
+- 20–59 → adult
+- 60+ → senior
+
+**Nationality** (from Nationalize):
+- Country with the highest probability is selected
+
+---
+
+## External APIs Used
+
+- [Genderize.io](https://genderize.io) — gender prediction
+- [Agify.io](https://agify.io) — age prediction
+- [Nationalize.io](https://nationalize.io) — nationality prediction
+
+---
+
+## How to Run Locally
+
+```bash
 npm install
-3. Run locally
-Bash
+```
+
+Create a `.env` file:
+DATABASE_URL=your_neon_postgresql_connection_string
+
+Run the server:
+```bash
 node index.js
-The server will start on http://localhost:3000.
+```
 
-4. Test the endpoint
-Bash
-curl "http://localhost:3000/api/classify?name=john"
-🌐 Deployment
-This project is configured for easy deployment on platforms like Vercel, Railway, Heroku, or AWS.
+Server runs on `http://localhost:3000`
 
-Ensure your server is configured to listen on the environment's dynamic port:
+---
 
-JavaScript
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+## Tech Stack
+
+- Node.js
+- Express
+- PostgreSQL (Neon)
+- Vercel (deployment)
