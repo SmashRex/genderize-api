@@ -4,8 +4,21 @@ if (process.env.NODE_ENV !== 'production') {
 const express = require('express')
 const app = express()
 const pool = require('./db')
-const { v7: uuidv7 } = require('uuid')
-
+function uuidv7() {
+    const now = Date.now()
+    const time = BigInt(now)
+    const timeHigh = Number((time >> 12n) & 0xFFFFFFFFn)
+    const timeLow = Number(time & 0xFFFn)
+    const rand = new Uint8Array(10)
+    crypto.getRandomValues(rand)
+    const hex = [
+        timeHigh.toString(16).padStart(8, '0'),
+        timeLow.toString(16).padStart(4, '0'),
+        '7' + (rand[0] & 0x0f).toString(16).padStart(3, '0'),
+        ((rand[1] & 0x3f) | 0x80).toString(16).padStart(2, '0') + Array.from(rand.slice(2, 8)).map(b => b.toString(16).padStart(2, '0')).join('')
+    ].join('-')
+    return hex
+}
 app.use(express.json())
 
 app.use((req, res, next) => {
