@@ -1,5 +1,4 @@
-Here's the updated README covering Stage 2. Copy and replace your entire README.md with this:
-markdown# Genderize API - Stage 2
+# Genderize API - Stage 2
 
 A REST API that accepts a name, calls three external APIs (Genderize, Agify, Nationalize), classifies the result, stores it in a PostgreSQL database, and exposes endpoints to manage and search profiles.
 
