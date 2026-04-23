@@ -213,6 +213,7 @@ app.get('/api/profiles', async (req, res) => {
             page: pageNum,
             limit: limitNum,
             total,
+            total_pages: Math.ceil(total / limitNum),
             data: dataResult.rows
         })
 
@@ -342,7 +343,7 @@ app.get('/api/profiles/search', async (req, res) => {
     const nothingFound = !gender && !age_group && min_age === null && max_age === null && !country_id
 
     if (nothingFound) {
-        return res.status(200).json({ status: 'error', message: 'Unable to interpret query' })
+        return res.status(400).json({ status: 'error', message: 'Unable to interpret query' })
     }
 
     // ── BUILD THE SQL QUERY ────────────────────────────────────────
@@ -400,6 +401,7 @@ app.get('/api/profiles/search', async (req, res) => {
             page: pageNum,
             limit: limitNum,
             total,
+            total_pages: Math.ceil(total / limitNum),
             data: dataResult.rows
         })
     } catch (err) {
